@@ -464,7 +464,13 @@ pub fn load_bytes_with_versions(bytes: &[u8]) -> Result<Loaded, FormatError> {
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|e| FormatError::Corrupt(e.to_string()))?;
     let text = String::from_utf8(read_member(&mut z, "document.json", MAX_MEMBER)?).map_err(|e| FormatError::Corrupt(e.to_string()))?;
     let (mut doc, mut issues, own_images) = parse_json(&text)?;
-    let names: Vec<String> = z.file_names().filter(|n| n.starts_with("images/")).map(str::to_string).collect();
+    let mut names = Vec::new();
+    for name in z.file_names() {
+        let name = name.map_err(|e| FormatError::Corrupt(e.to_string()))?;
+        if name.starts_with("images/") {
+            names.push(name.into_owned());
+        }
+    }
     let mut images = BTreeMap::new();
     let mut unread = Vec::new();
     for name in names {
