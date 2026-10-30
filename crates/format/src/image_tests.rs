@@ -25,7 +25,7 @@ fn doc_with_image() -> (Document, String) {
 /// The archive of `d` rebuilt with `edit` applied to each member (None drops it).
 fn rebuild(bytes: &[u8], edit: impl Fn(&str, Vec<u8>) -> Option<Vec<u8>>) -> Vec<u8> {
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
-    let names: Vec<String> = z.file_names().map(str::to_string).collect();
+    let names: Vec<String> = z.file_names().map(|name| name.expect("zip entry name").into_owned()).collect();
     let mut buf = std::io::Cursor::new(Vec::new());
     let mut w = zip::ZipWriter::new(&mut buf);
     for n in names {
